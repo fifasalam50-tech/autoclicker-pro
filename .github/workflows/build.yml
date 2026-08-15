@@ -21,7 +21,10 @@ jobs:
             path: dist/AutoClickerPro-win-x64.exe
           - os: ubuntu-latest
             artifact: AutoClickerPro-linux-x86_64
-            path: dist/AutoClickerPro-linux-x86_64
+            path: |
+              dist/AutoClickerPro-linux-x86_64
+              dist/AutoClickerPro-linux-x86_64.deb
+              dist/AutoClickerPro-linux-x86_64.rpm
           - os: macos-latest
             artifact: AutoClickerPro-macos.app.zip
             path: AutoClickerPro-macos.app.zip
@@ -65,6 +68,72 @@ jobs:
         run: |
           xvfb-run -a python -m PyInstaller --noconfirm --clean --onefile --windowed --name AutoClickerPro-linux-x86_64 --collect-all pynput --collect-all Xlib autoclicker.py
 
+      - name: Package .deb (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -e
+          PKG=autoclickerpro_1.1.0_amd64
+          mkdir -p $PKG/DEBIAN $PKG/usr/bin $PKG/usr/share/applications $PKG/usr/share/icons/hicolor/256x256/apps
+          cp dist/AutoClickerPro-linux-x86_64 $PKG/usr/bin/autoclicker-pro
+          chmod +x $PKG/usr/bin/autoclicker-pro
+          cp icon.png $PKG/usr/share/icons/hicolor/256x256/apps/autoclicker-pro.png
+          cat > $PKG/usr/share/applications/autoclicker-pro.desktop <<'EOF'
+[Desktop Entry]
+Type=Application
+Name=Автокликер Pro
+Name[ru]=Автокликер Pro
+Comment=Неоновый автокликер
+Exec=/usr/bin/autoclicker-pro
+Icon=autoclicker-pro
+Terminal=false
+Categories=Utility;Accessibility;
+EOF
+          cat > $PKG/DEBIAN/control <<'EOF'
+Package: autoclicker-pro
+Version: 1.1.0
+Section: utils
+Priority: optional
+Architecture: amd64
+Maintainer: fifasalam50-tech
+Description: Неоновый автокликер для Windows, Linux и macOS
+Depends: libx11-6, libxext6, libxkbcommon0
+EOF
+          dpkg-deb --build --root-owner-group $PKG dist/AutoClickerPro-linux-x86_64.deb
+
+      - name: Package .rpm (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          set -e
+          sudo apt-get install -y rpm
+          mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
+          cat > $HOME/rpmbuild/SPECS/autoclicker-pro.spec <<'EOF'
+Name: autoclicker-pro
+Version: 1.1.0
+Release: 1
+Summary: Неоновый автокликер для Windows, Linux и macOS
+License: MIT
+BuildArch: x86_64
+
+%description
+Неоновый автокликер с интервалом, случайной задержкой и горячей клавишей.
+
+%prep
+
+%build
+
+%install
+install -Dm755 %{_sourcedir}/AutoClickerPro-linux-x86_64 %{buildroot}%{_bindir}/autoclicker-pro
+install -Dm644 %{_sourcedir}/icon.png %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/autoclicker-pro.png
+
+%files
+%{_bindir}/autoclicker-pro
+%{_datadir}/icons/hicolor/256x256/apps/autoclicker-pro.png
+EOF
+          cp dist/AutoClickerPro-linux-x86_64 $HOME/rpmbuild/SOURCES/
+          cp icon.png $HOME/rpmbuild/SOURCES/
+          rpmbuild -bb $HOME/rpmbuild/SPECS/autoclicker-pro.spec
+          cp $HOME/rpmbuild/RPMS/x86_64/*.rpm dist/AutoClickerPro-linux-x86_64.rpm
+
       - name: Build (macOS)
         if: runner.os == 'macOS'
         run: python -m PyInstaller --noconfirm --clean --windowed --name AutoClickerPro --icon AppIcon.icns --collect-all pynput autoclicker.py
@@ -94,4 +163,6 @@ jobs:
           files: |
             artifacts/AutoClickerPro-win-x64.exe/AutoClickerPro-win-x64.exe
             artifacts/AutoClickerPro-linux-x86_64/AutoClickerPro-linux-x86_64
+            artifacts/AutoClickerPro-linux-x86_64/AutoClickerPro-linux-x86_64.deb
+            artifacts/AutoClickerPro-linux-x86_64/AutoClickerPro-linux-x86_64.rpm
             artifacts/AutoClickerPro-macos.app.zip/AutoClickerPro-macos.app.zip

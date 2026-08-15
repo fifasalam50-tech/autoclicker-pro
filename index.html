@@ -222,6 +222,18 @@ section { padding: 46px 0 20px; }
   margin-bottom: 22px;
 }
 
+.dl-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.dl-row .dl-btn {
+  flex: 1;
+  min-width: 0;
+  padding: 13px 16px;
+  font-size: 13px;
+}
+
 .btn, .dl-btn {
   display: inline-block;
   padding: 16px 34px;
@@ -449,8 +461,12 @@ footer .foot .btn-sm:hover { transform: translateY(-2px); filter: brightness(1.1
       <div class="dl-card">
         <div class="os">Linux</div>
         <div class="ver">X11 (Xorg) · x86_64</div>
-        <p>Исполняемый файл без установки. Дайте права на запуск и откройте. Требуется сеанс X11.</p>
-        <a class="dl-btn" href="https://github.com/fifasalam50-tech/autoclicker-pro/releases/latest/download/AutoClickerPro-linux-x86_64" target="_blank">Скачать бинарник</a>
+        <p>Выберите пакет для вашего дистрибутива: Ubuntu/Debian — .deb, Fedora/OpenSUSE — .rpm, или исполняемый файл без установки.</p>
+        <div class="dl-row">
+          <a class="dl-btn" href="https://github.com/fifasalam50-tech/autoclicker-pro/releases/latest/download/AutoClickerPro-linux-x86_64.deb" target="_blank">Скачать .deb</a>
+          <a class="dl-btn" href="https://github.com/fifasalam50-tech/autoclicker-pro/releases/latest/download/AutoClickerPro-linux-x86_64.rpm" target="_blank">Скачать .rpm</a>
+          <a class="dl-btn" href="https://github.com/fifasalam50-tech/autoclicker-pro/releases/latest/download/AutoClickerPro-linux-x86_64" target="_blank">Бинарник</a>
+        </div>
       </div>
       <div class="dl-card">
         <div class="os">macOS</div>
