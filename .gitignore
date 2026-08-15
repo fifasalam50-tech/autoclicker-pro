@@ -1,0 +1,15 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Сборка PyInstaller
+dist/
+build/
+*.spec
+
+# Другие версии программы (не публикуются)
+main.py
+engine.py
+Запуск.bat

@@ -1,0 +1,96 @@
+name: Build
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: AutoClickerPro-win-x64.exe
+            path: dist/AutoClickerPro-win-x64.exe
+          - os: ubuntu-latest
+            artifact: AutoClickerPro-linux-x86_64
+            path: dist/AutoClickerPro-linux-x86_64
+          - os: macos-latest
+            artifact: AutoClickerPro-macos.app.zip
+            path: AutoClickerPro-macos.app.zip
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: python -m pip install -r requirements.txt pyinstaller
+
+      - name: Install system packages (Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y xvfb
+
+      - name: Build macOS icon (icns)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir AppIcon.iconset
+          sips -z 16 16 icon.png --out AppIcon.iconset/icon_16x16.png
+          sips -z 32 32 icon.png --out AppIcon.iconset/icon_16x16@2x.png
+          sips -z 32 32 icon.png --out AppIcon.iconset/icon_32x32.png
+          sips -z 64 64 icon.png --out AppIcon.iconset/icon_32x32@2x.png
+          sips -z 128 128 icon.png --out AppIcon.iconset/icon_128x128.png
+          sips -z 256 256 icon.png --out AppIcon.iconset/icon_128x128@2x.png
+          sips -z 256 256 icon.png --out AppIcon.iconset/icon_256x256.png
+          sips -z 512 512 icon.png --out AppIcon.iconset/icon_256x256@2x.png
+          sips -z 512 512 icon.png --out AppIcon.iconset/icon_512x512.png
+          sips -z 1024 1024 icon.png --out AppIcon.iconset/icon_512x512@2x.png
+          iconutil -c icns AppIcon.iconset -o AppIcon.icns
+
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
+        run: python -m PyInstaller --noconfirm --clean --onefile --windowed --name AutoClickerPro-win-x64 --icon icon.ico autoclicker.py
+
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          xvfb-run -a python -m PyInstaller --noconfirm --clean --onefile --windowed --name AutoClickerPro-linux-x86_64 --collect-all pynput --collect-all Xlib autoclicker.py
+
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
+        run: python -m PyInstaller --noconfirm --clean --windowed --name AutoClickerPro --icon AppIcon.icns --collect-all pynput autoclicker.py
+
+      - name: Package macOS app
+        if: runner.os == 'macOS'
+        run: |
+          cd dist
+          zip -r ../AutoClickerPro-macos.app.zip AutoClickerPro.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.path }}
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            artifacts/AutoClickerPro-win-x64.exe/AutoClickerPro-win-x64.exe
+            artifacts/AutoClickerPro-linux-x86_64/AutoClickerPro-linux-x86_64
+            artifacts/AutoClickerPro-macos.app.zip/AutoClickerPro-macos.app.zip

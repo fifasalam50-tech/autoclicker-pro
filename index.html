@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Автокликер Pro — неоновый кликер для Windows, Linux и macOS</title>
+<style>
+:root {
+  --blue: #4a8cff;
+  --blue-light: #5d9cff;
+  --blue-dark: #2656c4;
+  --text: #eaf2ff;
+  --text-dim: #9db4e0;
+  --text-faint: #7e8fb8;
+  --panel: rgba(13, 25, 48, 0.55);
+  --panel-border: rgba(120, 170, 255, 0.16);
+  --glow: rgba(80, 150, 255, 0.55);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "Segoe UI", "Segoe UI Variable", Arial, sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: #070d1d;
+}
+
+.bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background: linear-gradient(180deg,
+    #2a55a0 0%,
+    #16305f 38%,
+    #0a152e 68%,
+    #050a18 100%);
+  background-size: 100% 100%;
+  animation: hue 26s ease-in-out infinite;
+}
+@keyframes hue {
+  0%, 100% { filter: hue-rotate(0deg) brightness(1); }
+  50%      { filter: hue-rotate(14deg) brightness(1.08); }
+}
+
+.glow {
+  position: fixed;
+  width: 900px;
+  height: 900px;
+  left: 50%;
+  top: 32%;
+  margin-left: -450px;
+  margin-top: -450px;
+  z-index: -1;
+  background: radial-gradient(circle,
+    rgba(110, 180, 255, 0.22) 0%,
+    rgba(60, 120, 230, 0.10) 45%,
+    transparent 70%);
+  filter: blur(30px);
+  animation: drift 24s ease-in-out infinite;
+}
+@keyframes drift {
+  0%, 100% { transform: translate3d(-14vw, -6vh, 0) scale(1); }
+  33%      { transform: translate3d(10vw, 4vh, 0) scale(1.12); }
+  66%      { transform: translate3d(-4vw, 9vh, 0) scale(0.95); }
+}
+
+.particle {
+  position: fixed;
+  bottom: -20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(150, 200, 255, 0.85) 0%, transparent 70%);
+  z-index: -1;
+  pointer-events: none;
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(ellipse at 50% 40%, transparent 55%, rgba(0,0,0,0.55) 100%);
+  pointer-events: none;
+}
+
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+header {
+  padding: 26px 0 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.brand { display: flex; align-items: center; gap: 14px; }
+
+.logo {
+  width: 52px;
+  height: 52px;
+  filter: drop-shadow(0 0 18px var(--glow));
+}
+
+nav { display: flex; gap: 30px; }
+nav a {
+  color: var(--text-dim);
+  text-decoration: none;
+  font-size: 14px;
+  letter-spacing: 0.3px;
+  transition: color 0.25s;
+}
+nav a:hover { color: var(--text); }
+
+.hero {
+  padding: 76px 0 28px;
+  text-align: center;
+}
+
+.hero .badge {
+  display: inline-block;
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #8fa9e0;
+  border: 1px solid rgba(140, 180, 255, 0.28);
+  background: rgba(255,255,255,0.05);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-bottom: 26px;
+}
+
+.hero h1 {
+  font-size: clamp(40px, 7vw, 64px);
+  font-weight: 800;
+  background: linear-gradient(180deg, #ffffff 0%, #a9c8ff 55%, #6f9bff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 60px rgba(80, 150, 255, 0.35);
+  line-height: 1.1;
+  letter-spacing: 0.5px;
+}
+
+.hero p.sub {
+  margin: 20px auto 0;
+  max-width: 640px;
+  color: var(--text-dim);
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+section { padding: 46px 0 20px; }
+
+.section-head { text-align: center; margin-bottom: 42px; }
+.section-head h2 {
+  font-size: clamp(26px, 4vw, 36px);
+  font-weight: 700;
+  color: #ffffff;
+}
+.section-head .line {
+  width: 64px;
+  height: 3px;
+  margin: 18px auto 0;
+  border-radius: 3px;
+  background: linear-gradient(90deg, #4a8cff, #8fbeff);
+  box-shadow: 0 0 14px var(--glow);
+}
+
+.dl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.dl-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 30px 28px 28px;
+  backdrop-filter: blur(8px);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.dl-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(140, 190, 255, 0.5), transparent);
+}
+.dl-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(140, 190, 255, 0.45);
+  box-shadow: 0 18px 40px rgba(20, 40, 90, 0.5);
+}
+.dl-card .os {
+  font-size: 22px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+.dl-card .ver {
+  display: inline-block;
+  margin: 10px 0 14px;
+  font-size: 12px;
+  letter-spacing: 1px;
+  color: #8fa9e0;
+  border: 1px solid rgba(140, 180, 255, 0.25);
+  border-radius: 999px;
+  padding: 4px 12px;
+}
+.dl-card p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 22px;
+}
+
+.btn, .dl-btn {
+  display: inline-block;
+  padding: 16px 34px;
+  border-radius: 13px;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #ffffff;
+  text-decoration: none;
+  background: linear-gradient(180deg, #4a8cff 0%, #2656c4 100%);
+  box-shadow: 0 10px 30px rgba(70, 140, 255, 0.4), 0 0 0 1px rgba(120, 180, 255, 0.25);
+  transition: transform 0.25s, box-shadow 0.25s, filter 0.25s;
+}
+.btn:hover, .dl-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 44px rgba(80, 160, 255, 0.6), 0 0 0 1px rgba(140, 195, 255, 0.4);
+  filter: brightness(1.08);
+}
+.btn:active, .dl-btn:active { transform: translateY(0); }
+
+.btn { padding: 18px 46px; font-size: 17px; }
+.btn small {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.8;
+  margin-top: 2px;
+  letter-spacing: 0.3px;
+}
+
+.dl-note {
+  margin-top: 26px;
+  color: var(--text-faint);
+  font-size: 13px;
+  text-align: center;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 26px 26px 24px;
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s, border-color 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(140, 190, 255, 0.5), transparent);
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(140, 190, 255, 0.45);
+  box-shadow: 0 18px 40px rgba(20, 40, 90, 0.5);
+}
+
+.card .num {
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #7fa8e8;
+  margin-bottom: 10px;
+}
+
+.card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: #ffffff;
+  margin-bottom: 10px;
+}
+
+.card p {
+  color: var(--text-dim);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  counter-reset: step;
+}
+
+.step {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 18px;
+  padding: 26px;
+  position: relative;
+  backdrop-filter: blur(8px);
+}
+.step::before {
+  counter-increment: step;
+  content: "0" counter(step);
+  position: absolute;
+  top: 18px;
+  right: 22px;
+  font-size: 30px;
+  font-weight: 800;
+  color: rgba(122, 168, 232, 0.35);
+}
+.step h3 { font-size: 16px; color: #ffffff; margin-bottom: 8px; font-weight: 700; }
+.step p { color: var(--text-dim); font-size: 14px; line-height: 1.6; }
+
+.specs {
+  margin-top: 40px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+}
+.chip {
+  font-size: 13px;
+  color: var(--text-dim);
+  border: 1px solid rgba(140, 180, 255, 0.22);
+  border-radius: 999px;
+  padding: 8px 18px;
+  background: rgba(255,255,255,0.04);
+}
+
+footer {
+  margin-top: 60px;
+  padding: 30px 0 40px;
+  border-top: 1px solid rgba(140, 180, 255, 0.12);
+}
+footer .foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  color: var(--text-faint);
+  font-size: 13px;
+}
+footer .foot .btn-sm {
+  font-size: 13px;
+  font-weight: 600;
+  color: #ffffff;
+  background: linear-gradient(180deg, #4a8cff 0%, #2656c4 100%);
+  padding: 10px 22px;
+  border-radius: 10px;
+  text-decoration: none;
+  box-shadow: 0 6px 22px rgba(70, 140, 255, 0.4);
+  transition: transform 0.2s, filter 0.2s;
+}
+footer .foot .btn-sm:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+@media (max-width: 760px) {
+  nav { display: none; }
+  .hero { padding: 48px 0 20px; }
+}
+</style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="glow"></div>
+<div class="vignette"></div>
+
+<header>
+  <div class="wrap" style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="lgBg" x1="0" y1="0" x2="0" y2="256" gradientUnits="userSpaceOnUse">
+            <stop offset="0" stop-color="#2c60be"/>
+            <stop offset="1" stop-color="#070e26"/>
+          </linearGradient>
+          <linearGradient id="lgBody" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#78b8ff"/>
+            <stop offset="1" stop-color="#3c6ed7"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="256" height="256" rx="58" fill="url(#lgBg)"/>
+        <circle cx="128" cy="100" r="110" fill="#78b4ff" opacity="0.16"/>
+        <rect x="68" y="56" width="120" height="148" rx="42" fill="url(#lgBody)"/>
+        <rect x="126" y="62" width="4" height="40" rx="2" fill="#0a1632"/>
+        <rect x="74" y="96" width="108" height="4" rx="2" fill="#0a1632"/>
+      </svg>
+      <div>
+        <div style="font-weight:800;font-size:19px;letter-spacing:0.4px;">Автокликер Pro</div>
+        <div style="font-size:12px;color:var(--text-faint);">v1.0 для Windows, Linux и macOS</div>
+      </div>
+    </div>
+    <nav>
+      <a href="#download">Скачать</a>
+      <a href="#features">Возможности</a>
+      <a href="#usage">Использование</a>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="badge">НЕОНОВЫЙ АВТОКЛИКЕР ДЛЯ WINDOWS, LINUX И MACOS</div>
+    <h1>Автокликер Pro</h1>
+    <p class="sub">Быстрый и точный автокликер с переливающимся неоновым интерфейсом. Кликает точно под курсором с любой скоростью, по любой кнопке мыши и по любой горячей клавише.</p>
+  </div>
+</div>
+
+<section id="download">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Скачать</h2>
+      <div class="line"></div>
+    </div>
+    <div class="dl-grid">
+      <div class="dl-card">
+        <div class="os">Windows</div>
+        <div class="ver">10 и 11 · x64</div>
+        <p>Готовая программа в одном файле. Запустите двойным кликом, установка не требуется.</p>
+        <a class="dl-btn" href="https://github.com/USER/autoclicker-pro/releases/latest/download/AutoClickerPro-win-x64.exe" target="_blank">Скачать .exe</a>
+      </div>
+      <div class="dl-card">
+        <div class="os">Linux</div>
+        <div class="ver">X11 (Xorg) · x86_64</div>
+        <p>Исполняемый файл без установки. Дайте права на запуск и откройте. Требуется сеанс X11.</p>
+        <a class="dl-btn" href="https://github.com/USER/autoclicker-pro/releases/latest/download/AutoClickerPro-linux-x86_64" target="_blank">Скачать бинарник</a>
+      </div>
+      <div class="dl-card">
+        <div class="os">macOS</div>
+        <div class="ver">11 и новее</div>
+        <p>Приложение в zip-архиве. Распакуйте и перетащите в «Программы». Разрешите «Специальные возможности».</p>
+        <a class="dl-btn" href="https://github.com/USER/autoclicker-pro/releases/latest/download/AutoClickerPro-macos.app.zip" target="_blank">Скачать .zip</a>
+      </div>
+    </div>
+    <p class="dl-note">Сборки создаются автоматически серверами GitHub Actions при каждом релизе.</p>
+  </div>
+</section>
+
+<section id="features">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Возможности</h2>
+      <div class="line"></div>
+    </div>
+    <div class="grid">
+      <div class="card">
+        <div class="num">01</div>
+        <h3>Настройка интервала</h3>
+        <p>Задержка между кликами от 1 миллисекунды. Выбирайте скорость под любую задачу.</p>
+      </div>
+      <div class="card">
+        <div class="num">02</div>
+        <h3>Случайный интервал</h3>
+        <p>Режим случайной задержки в заданных пределах, чтобы клики выглядели естественнее.</p>
+      </div>
+      <div class="card">
+        <div class="num">03</div>
+        <h3>Выбор кнопки мыши</h3>
+        <p>Левая, правая или средняя кнопка — настраивается одним переключателем.</p>
+      </div>
+      <div class="card">
+        <div class="num">04</div>
+        <h3>Двойной и тройной клик</h3>
+        <p>Одиночный, двойной или тройной клик за один шаг цикла.</p>
+      </div>
+      <div class="card">
+        <div class="num">05</div>
+        <h3>Лимит кликов</h3>
+        <p>Задайте точное количество кликов или работайте в бесконечном режиме.</p>
+      </div>
+      <div class="card">
+        <div class="num">06</div>
+        <h3>Глобальная горячая клавиша</h3>
+        <p>Запуск и остановка по клавише F1–F12 в любом приложении, даже вне окна программы.</p>
+      </div>
+      <div class="card">
+        <div class="num">07</div>
+        <h3>Счётчик кликов</h3>
+        <p>Текущее количество выполненных кликов отображается в реальном времени.</p>
+      </div>
+      <div class="card">
+        <div class="num">08</div>
+        <h3>Клик под курсором</h3>
+        <p>Клики выполняются точно там, где находится указатель мыши.</p>
+      </div>
+      <div class="card">
+        <div class="num">09</div>
+        <h3>Переливающийся интерфейс</h3>
+        <p>Живой тёмно-синий градиент с движущимся свечением и светящимися элементами управления.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="usage">
+  <div class="wrap">
+    <div class="section-head">
+      <h2>Как использовать</h2>
+      <div class="line"></div>
+    </div>
+    <div class="steps">
+      <div class="step">
+        <h3>Скачайте программу</h3>
+        <p>Выберите версию для своей системы и запустите. Установка не требуется.</p>
+      </div>
+      <div class="step">
+        <h3>Настройте клики</h3>
+        <p>Укажите интервал, кнопку мыши, тип клика и лимит, если он нужен.</p>
+      </div>
+      <div class="step">
+        <h3>Нажмите СТАРТ</h3>
+        <p>Запустите клики кнопкой СТАРТ или глобальной клавишей F6, затем наведите курсор на цель.</p>
+      </div>
+    </div>
+    <div class="specs">
+      <span class="chip">Windows 10 и 11</span>
+      <span class="chip">Linux с X11 (Xorg)</span>
+      <span class="chip">macOS 11 и новее</span>
+      <span class="chip">Не требует установки</span>
+      <span class="chip">Клики через системный API</span>
+      <span class="chip">Версия 1.0</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot">
+    <div>
+      <div style="font-weight:700;color:#c6d6f5;margin-bottom:4px;">Автокликер Pro</div>
+      <div>Переливающийся неоновый кликер для Windows, Linux и macOS.</div>
+    </div>
+    <a class="btn-sm" href="#download">Скачать последнюю версию</a>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var body = document.body;
+
+  function spawnParticle() {
+    var size = 2 + Math.random() * 5;
+    var el = document.createElement('div');
+    el.className = 'particle';
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.left = Math.random() * 100 + 'vw';
+    el.style.opacity = 0.25 + Math.random() * 0.5;
+    body.appendChild(el);
+    var duration = 9000 + Math.random() * 9000;
+    var dx = (Math.random() - 0.5) * 8;
+    var start = performance.now();
+    function tick(now) {
+      var t = (now - start) / duration;
+      if (t >= 1) { el.remove(); return; }
+      var y = t * (window.innerHeight + 60);
+      var x = (window.innerWidth * parseFloat(el.style.left) / 100 + dx * t);
+      el.style.transform = 'translate(' + x + 'px,' + y + 'px)';
+      el.style.opacity = Math.min(0.75, (1 - t) * 0.8);
+      requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  }
+
+  for (var i = 0; i < 22; i++) spawnParticle();
+  setInterval(spawnParticle, 900);
+})();
+</script>
+
+</body>
+</html>
