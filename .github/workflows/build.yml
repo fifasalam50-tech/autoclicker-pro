@@ -77,27 +77,8 @@ jobs:
           cp dist/AutoClickerPro-linux-x86_64 $PKG/usr/bin/autoclicker-pro
           chmod +x $PKG/usr/bin/autoclicker-pro
           cp icon.png $PKG/usr/share/icons/hicolor/256x256/apps/autoclicker-pro.png
-          cat > $PKG/usr/share/applications/autoclicker-pro.desktop <<'EOF'
-[Desktop Entry]
-Type=Application
-Name=Автокликер Pro
-Name[ru]=Автокликер Pro
-Comment=Неоновый автокликер
-Exec=/usr/bin/autoclicker-pro
-Icon=autoclicker-pro
-Terminal=false
-Categories=Utility;Accessibility;
-EOF
-          cat > $PKG/DEBIAN/control <<'EOF'
-Package: autoclicker-pro
-Version: 1.1.0
-Section: utils
-Priority: optional
-Architecture: amd64
-Maintainer: fifasalam50-tech
-Description: Неоновый автокликер для Windows, Linux и macOS
-Depends: libx11-6, libxext6, libxkbcommon0
-EOF
+          printf '%s\n' '[Desktop Entry]' 'Type=Application' 'Name=Автокликер Pro' 'Name[ru]=Автокликер Pro' 'Comment=Неоновый автокликер' 'Exec=/usr/bin/autoclicker-pro' 'Icon=autoclicker-pro' 'Terminal=false' 'Categories=Utility;Accessibility;' > $PKG/usr/share/applications/autoclicker-pro.desktop
+          printf '%s\n' 'Package: autoclicker-pro' 'Version: 1.1.0' 'Section: utils' 'Priority: optional' 'Architecture: amd64' 'Maintainer: fifasalam50-tech' 'Description: Неоновый автокликер для Windows, Linux и macOS' 'Depends: libx11-6, libxext6, libxkbcommon0' > $PKG/DEBIAN/control
           dpkg-deb --build --root-owner-group $PKG dist/AutoClickerPro-linux-x86_64.deb
 
       - name: Package .rpm (Linux)
@@ -106,29 +87,7 @@ EOF
           set -e
           sudo apt-get install -y rpm
           mkdir -p $HOME/rpmbuild/{BUILD,RPMS,SOURCES,SPECS,SRPMS}
-          cat > $HOME/rpmbuild/SPECS/autoclicker-pro.spec <<'EOF'
-Name: autoclicker-pro
-Version: 1.1.0
-Release: 1
-Summary: Неоновый автокликер для Windows, Linux и macOS
-License: MIT
-BuildArch: x86_64
-
-%description
-Неоновый автокликер с интервалом, случайной задержкой и горячей клавишей.
-
-%prep
-
-%build
-
-%install
-install -Dm755 %{_sourcedir}/AutoClickerPro-linux-x86_64 %{buildroot}%{_bindir}/autoclicker-pro
-install -Dm644 %{_sourcedir}/icon.png %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/autoclicker-pro.png
-
-%files
-%{_bindir}/autoclicker-pro
-%{_datadir}/icons/hicolor/256x256/apps/autoclicker-pro.png
-EOF
+          printf '%s\n' 'Name: autoclicker-pro' 'Version: 1.1.0' 'Release: 1' 'Summary: Неоновый автокликер для Windows, Linux и macOS' 'License: MIT' 'BuildArch: x86_64' '' '%description' 'Неоновый автокликер с интервалом, случайной задержкой и горячей клавишей.' '' '%prep' '' '%build' '' '%install' 'install -Dm755 %{_sourcedir}/AutoClickerPro-linux-x86_64 %{buildroot}%{_bindir}/autoclicker-pro' 'install -Dm644 %{_sourcedir}/icon.png %{buildroot}%{_datadir}/icons/hicolor/256x256/apps/autoclicker-pro.png' '' '%files' '%{_bindir}/autoclicker-pro' '%{_datadir}/icons/hicolor/256x256/apps/autoclicker-pro.png' > $HOME/rpmbuild/SPECS/autoclicker-pro.spec
           cp dist/AutoClickerPro-linux-x86_64 $HOME/rpmbuild/SOURCES/
           cp icon.png $HOME/rpmbuild/SOURCES/
           rpmbuild -bb $HOME/rpmbuild/SPECS/autoclicker-pro.spec
